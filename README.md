@@ -45,6 +45,25 @@ Total: R$ 65,00
 
 Com os mesmos dados, escolha `2` e `n` para agendar apenas tosa. O resumo mostra `Tosa` e o total de `R$ 70,00`. Se informar uma data como `31/02/2030 14:30`, o programa pede uma nova data e hora.
 
+### Interface web
+
+Além do terminal, o projeto tem uma página de agendamento na pasta `web/`. A classe `ServidorWeb` usa o `HttpServer` do próprio JDK para servir a página e expor uma API pequena. Essa API usa as mesmas fábricas e os mesmos adicionais da aplicação de terminal. Depois de compilar com o comando acima, execute na raiz do repositório:
+
+```bash
+java -cp out br.edu.petshop.web.ServidorWeb
+```
+
+Abra `http://localhost:8080` no navegador. Para usar outra porta, passe o número como argumento, por exemplo `java -cp out br.edu.petshop.web.ServidorWeb 3000`. Os agendamentos ficam em memória enquanto o servidor estiver rodando.
+
+| Rota | Uso |
+| --- | --- |
+| `GET /api/catalogo` | Lista os serviços base e os adicionais com seus preços. |
+| `GET /api/orcamento?servico=banho&adicional=corte-unhas` | Monta o serviço com os adicionais e devolve a descrição e o total. |
+| `POST /api/agendamentos` | Cria um agendamento com `tutor`, `pet`, `horario` (`2030-11-20T14:30`), `servico` e `adicional` (opcional e repetível). |
+| `GET /api/agendamentos` | Lista os agendamentos feitos desde que o servidor foi iniciado. |
+
+Para um novo serviço ou adicional aparecer na página, registre-o nas listas `SERVICOS` e `ADICIONAIS` de `ServidorWeb`. O ícone do cartão é escolhido pelo id em `web/app.js`. Um id sem ícone usa um ícone padrão.
+
 ### Padrões de projeto
 
 #### Factory Method
@@ -73,7 +92,7 @@ Cada integrante deve fazer pelo menos um commit autoral com a própria conta do 
 
 ### Declaração de uso de IA
 
-Na Parte 1, foi usado OpenAI Codex (GPT-6) para gerar a implementação inicial em Java, estruturar este README e verificar a compilação e os exemplos do fluxo de agendamento.
+Na Parte 1, foi usado OpenAI Codex (GPT-6) para gerar a implementação inicial em Java, estruturar este README e verificar a compilação e os exemplos do fluxo de agendamento. A interface web (pasta `web/` e classe `ServidorWeb`) foi gerada com Claude Code (Claude Opus 5.5).
 
 ## Parte 2 — Extensão via pull request
 
