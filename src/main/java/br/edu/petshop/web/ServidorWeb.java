@@ -5,11 +5,10 @@ import static java.nio.charset.StandardCharsets.UTF_8;
 import br.edu.petshop.dominio.Agendamento;
 import br.edu.petshop.dominio.Pet;
 import br.edu.petshop.dominio.Tutor;
-import br.edu.petshop.servico.AgendamentoFactory;
-import br.edu.petshop.servico.BanhoFactory;
-import br.edu.petshop.servico.CorteDeUnhas;
+import br.edu.petshop.servico.CatalogoServicos;
+import br.edu.petshop.servico.CatalogoServicos.OpcaoAdicional;
+import br.edu.petshop.servico.CatalogoServicos.OpcaoServico;
 import br.edu.petshop.servico.Servico;
-import br.edu.petshop.servico.TosaFactory;
 import com.sun.net.httpserver.HttpExchange;
 import com.sun.net.httpserver.HttpHandler;
 import com.sun.net.httpserver.HttpServer;
@@ -30,40 +29,14 @@ import java.util.List;
 import java.util.Locale;
 import java.util.Map;
 import java.util.concurrent.CopyOnWriteArrayList;
-import java.util.function.UnaryOperator;
 import java.util.stream.Collectors;
 
-/**
- * Servidor da interface web, feito só com a biblioteca padrão do JDK.
- * Serve os arquivos da pasta {@code web/} e expõe uma API pequena que usa
- * as mesmas fábricas (Factory Method) e adicionais (Decorator) do terminal.
- */
 public final class ServidorWeb {
-    /** Serviços base exibidos na página. Um novo serviço entra aqui com a sua fábrica. */
-    private static final List<OpcaoServico> SERVICOS = List.of(
-            new OpcaoServico("banho", new BanhoFactory()),
-            new OpcaoServico("tosa", new TosaFactory()));
-
-    /** Adicionais exibidos na página. Um novo adicional entra aqui com o seu decorator. */
-    private static final List<OpcaoAdicional> ADICIONAIS = List.of(
-            new OpcaoAdicional("corte-unhas", "Corte de unhas", CorteDeUnhas::new));
-
     private static final DateTimeFormatter FORMATO_HORARIO = DateTimeFormatter
             .ofPattern("dd/MM/uuuu HH:mm")
             .withResolverStyle(ResolverStyle.STRICT);
     private static final Path PASTA_WEB = Path.of("web").toAbsolutePath().normalize();
-    private static final Pet PET_SIMULACAO = new Pet("Simulação", new Tutor("Simulação"));
-    private static final Servico SERVICO_VAZIO = new Servico() {
-        @Override
-        public String descricao() {
-            return "";
-        }
-
-        @Override
-        public BigDecimal preco() {
-            return BigDecimal.ZERO;
-        }
-    };
+    private static final int LIMITE_CORPO = 8192;
     private static final List<Agendamento> AGENDAMENTOS = new CopyOnWriteArrayList<>();
 
     private ServidorWeb() {
@@ -81,19 +54,20 @@ public final class ServidorWeb {
         if (!Files.isDirectory(PASTA_WEB)) {
             System.out.println("Aviso: pasta web/ não encontrada. Execute o servidor na raiz do repositório.");
         }
-        System.out.println("Pet Shop web em http://localhost:" + porta + " (Ctrl+C para encerrar)");
+        System.out.println("Pet Shop web em http://localhost:" + servidor.getAddress().getPort()
+                + " (Ctrl+C para encerrar)");
     }
 
     private static Resposta catalogo(HttpExchange troca) {
         exigir(troca, "/api/catalogo", "GET");
-        String servicos = SERVICOS.stream()
+        String servicos = CatalogoServicos.servicos().stream()
                 .map(opcao -> {
-                    Servico servico = simular(opcao, List.of());
+                    Servico servico = opcao.orcar(List.of());
                     return item(opcao.id(), servico.descricao(), servico.preco());
                 })
                 .collect(Collectors.joining(",", "[", "]"));
-        String adicionais = ADICIONAIS.stream()
-                .map(opcao -> item(opcao.id(), opcao.nome(), opcao.decorador().apply(SERVICO_VAZIO).preco()))
+        String adicionais = CatalogoServicos.adicionais().stream()
+                .map(opcao -> item(opcao.id(), opcao.nome(), opcao.preco()))
                 .collect(Collectors.joining(",", "[", "]"));
         return Resposta.json(200, "{\"servicos\":" + servicos + ",\"adicionais\":" + adicionais + "}");
     }
@@ -101,7 +75,7 @@ public final class ServidorWeb {
     private static Resposta orcamento(HttpExchange troca) {
         exigir(troca, "/api/orcamento", "GET");
         Map<String, List<String>> parametros = lerParametros(troca.getRequestURI().getRawQuery());
-        Servico servico = simular(buscarServico(parametros), buscarAdicionais(parametros));
+        Servico servico = buscarServico(parametros).orcar(buscarAdicionais(parametros));
         return Resposta.json(200, "{\"servico\":" + aspas(servico.descricao())
                 + ",\"total\":" + servico.preco().toPlainString() + "}");
     }
@@ -114,14 +88,17 @@ public final class ServidorWeb {
                     .collect(Collectors.joining(",", "[", "]")));
         }
 
-        Map<String, List<String>> parametros = lerParametros(new String(troca.getRequestBody().readAllBytes(), UTF_8));
+        byte[] corpo = troca.getRequestBody().readNBytes(LIMITE_CORPO + 1);
+        if (corpo.length > LIMITE_CORPO) {
+            throw new RequisicaoInvalida(413, "Os dados do agendamento são muito longos.");
+        }
+        Map<String, List<String>> parametros = lerParametros(new String(corpo, UTF_8));
         Tutor tutor = new Tutor(obrigatorio(parametros, "tutor", "Informe o nome do tutor."));
         Pet pet = new Pet(obrigatorio(parametros, "pet", "Informe o nome do pet."), tutor);
         LocalDateTime horario = lerHorario(obrigatorio(parametros, "horario", "Informe a data e o horário."));
         OpcaoServico servico = buscarServico(parametros);
 
-        Agendamento agendamento = servico.fabrica()
-                .agendar(pet, horario, personalizacao(buscarAdicionais(parametros)));
+        Agendamento agendamento = servico.agendar(pet, horario, buscarAdicionais(parametros));
         AGENDAMENTOS.add(agendamento);
         return Resposta.json(201, json(agendamento));
     }
@@ -141,42 +118,13 @@ public final class ServidorWeb {
         return new Resposta(200, tipoDoArquivo(arquivo), Files.readAllBytes(arquivo));
     }
 
-    /** criarServico() é protegido, então a simulação passa pelo mesmo fluxo público do Factory Method. */
-    private static Servico simular(OpcaoServico opcao, List<OpcaoAdicional> adicionais) {
-        return opcao.fabrica().agendar(PET_SIMULACAO, LocalDateTime.now(), personalizacao(adicionais)).servico();
-    }
-
-    /** Envolve o serviço base com cada adicional escolhido, na ordem recebida (Decorator). */
-    private static UnaryOperator<Servico> personalizacao(List<OpcaoAdicional> adicionais) {
-        return servico -> {
-            Servico decorado = servico;
-            for (OpcaoAdicional adicional : adicionais) {
-                decorado = adicional.decorador().apply(decorado);
-            }
-            return decorado;
-        };
-    }
-
     private static OpcaoServico buscarServico(Map<String, List<String>> parametros) {
         String id = obrigatorio(parametros, "servico", "Escolha um serviço.");
-        return SERVICOS.stream()
-                .filter(opcao -> opcao.id().equals(id))
-                .findFirst()
-                .orElseThrow(() -> new RequisicaoInvalida(400, "Serviço desconhecido: " + id + "."));
+        return CatalogoServicos.buscarServico(id);
     }
 
     private static List<OpcaoAdicional> buscarAdicionais(Map<String, List<String>> parametros) {
-        List<OpcaoAdicional> escolhidos = new ArrayList<>();
-        for (String id : parametros.getOrDefault("adicional", List.of())) {
-            OpcaoAdicional adicional = ADICIONAIS.stream()
-                    .filter(opcao -> opcao.id().equals(id))
-                    .findFirst()
-                    .orElseThrow(() -> new RequisicaoInvalida(400, "Adicional desconhecido: " + id + "."));
-            if (!escolhidos.contains(adicional)) {
-                escolhidos.add(adicional);
-            }
-        }
-        return escolhidos;
+        return CatalogoServicos.buscarAdicionais(parametros.getOrDefault("adicional", List.of()));
     }
 
     private static String obrigatorio(Map<String, List<String>> parametros, String nome, String mensagem) {
@@ -206,8 +154,14 @@ public final class ServidorWeb {
                 continue;
             }
             int igual = par.indexOf('=');
-            String chave = URLDecoder.decode(igual < 0 ? par : par.substring(0, igual), UTF_8);
-            String valor = igual < 0 ? "" : URLDecoder.decode(par.substring(igual + 1), UTF_8);
+            String chave;
+            String valor;
+            try {
+                chave = URLDecoder.decode(igual < 0 ? par : par.substring(0, igual), UTF_8);
+                valor = igual < 0 ? "" : URLDecoder.decode(par.substring(igual + 1), UTF_8);
+            } catch (IllegalArgumentException ex) {
+                throw new RequisicaoInvalida(400, "Requisição inválida.");
+            }
             parametros.computeIfAbsent(chave, k -> new ArrayList<>()).add(valor);
         }
         return parametros;
@@ -230,7 +184,8 @@ public final class ServidorWeb {
             } catch (RequisicaoInvalida ex) {
                 resposta = Resposta.json(ex.status, "{\"erro\":" + aspas(ex.getMessage()) + "}");
             } catch (IllegalArgumentException ex) {
-                resposta = Resposta.json(400, "{\"erro\":\"Requisição inválida.\"}");
+                String mensagem = ex.getMessage() == null ? "Requisição inválida." : ex.getMessage();
+                resposta = Resposta.json(400, "{\"erro\":" + aspas(mensagem) + "}");
             } catch (RuntimeException | IOException ex) {
                 ex.printStackTrace();
                 resposta = Resposta.json(500, "{\"erro\":\"Erro interno no servidor.\"}");
@@ -293,12 +248,6 @@ public final class ServidorWeb {
         };
     }
 
-    private record OpcaoServico(String id, AgendamentoFactory fabrica) {
-    }
-
-    private record OpcaoAdicional(String id, String nome, UnaryOperator<Servico> decorador) {
-    }
-
     @FunctionalInterface
     private interface Rota {
         Resposta responder(HttpExchange troca) throws IOException;
@@ -311,6 +260,7 @@ public final class ServidorWeb {
     }
 
     private static final class RequisicaoInvalida extends RuntimeException {
+        private static final long serialVersionUID = 1L;
         private final int status;
 
         RequisicaoInvalida(int status, String mensagem) {

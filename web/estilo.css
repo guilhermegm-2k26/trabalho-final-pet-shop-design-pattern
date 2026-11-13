@@ -20,8 +20,8 @@
   --raio-p: 14px;
   --largura: 1120px;
   --margem: 24px;
-  --fonte-titulo: "Fraunces", Georgia, "Times New Roman", serif;
-  --fonte-texto: "Plus Jakarta Sans", system-ui, -apple-system, "Segoe UI", sans-serif;
+  --fonte-titulo: Georgia, "Times New Roman", serif;
+  --fonte-texto: system-ui, -apple-system, "Segoe UI", sans-serif;
 }
 
 @media (prefers-color-scheme: dark) {
@@ -194,15 +194,6 @@ h2 {
 
 .aviso strong {
   display: block;
-}
-
-.aviso code {
-  padding: 2px 7px;
-  border-radius: 6px;
-  background: var(--superficie);
-  color: var(--tinta);
-  font-size: 0.875em;
-  overflow-wrap: anywhere;
 }
 
 .grade {

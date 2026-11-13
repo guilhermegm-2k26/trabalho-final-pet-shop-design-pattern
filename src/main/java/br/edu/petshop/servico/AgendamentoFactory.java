@@ -7,8 +7,11 @@ import java.util.function.UnaryOperator;
 
 public abstract class AgendamentoFactory {
     public final Agendamento agendar(Pet pet, LocalDateTime horario, UnaryOperator<Servico> personalizar) {
-        Servico servico = personalizar.apply(criarServico());
-        return new Agendamento(pet, horario, servico);
+        return new Agendamento(pet, horario, montarServico(personalizar));
+    }
+
+    public final Servico montarServico(UnaryOperator<Servico> personalizar) {
+        return personalizar.apply(criarServico());
     }
 
     protected abstract Servico criarServico();

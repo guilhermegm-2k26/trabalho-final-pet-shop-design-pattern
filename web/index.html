@@ -5,9 +5,6 @@
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <title>Pet Shop · Agendamento</title>
   <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='%23C4452A'%3E%3Cellipse cx='5.5' cy='10' rx='2.2' ry='2.7'/%3E%3Cellipse cx='9.5' cy='5.2' rx='2.2' ry='2.7'/%3E%3Cellipse cx='14.5' cy='5.2' rx='2.2' ry='2.7'/%3E%3Cellipse cx='18.5' cy='10' rx='2.2' ry='2.7'/%3E%3Cpath d='M12 10.8c-3 0-6.2 4.3-6.2 6.8 0 1.8 1.4 2.6 3 2.6 1.4 0 2.1-.7 3.2-.7s1.8.7 3.2.7c1.6 0 3-.8 3-2.6 0-2.5-3.2-6.8-6.2-6.8z'/%3E%3C/svg%3E">
-  <link rel="preconnect" href="https://fonts.googleapis.com">
-  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,600;0,9..144,700;1,9..144,600&family=Plus+Jakarta+Sans:wght@400;500;600;700&display=swap">
   <link rel="stylesheet" href="estilo.css">
   <script src="app.js" defer></script>
 </head>
@@ -32,7 +29,7 @@
 
     <div id="aviso-servidor" class="aviso" role="alert" hidden>
       <strong>Não foi possível falar com o servidor.</strong>
-      Rode <code>java -cp out br.edu.petshop.web.ServidorWeb</code> na raiz do projeto e recarregue a página.
+      Recarregue a página para tentar novamente.
     </div>
 
     <div class="grade">
@@ -60,7 +57,7 @@
             </label>
             <label class="campo">
               <span>Horário</span>
-              <input type="time" name="hora" step="900" required>
+              <input type="time" name="hora" required>
             </label>
           </div>
         </fieldset>
@@ -98,7 +95,7 @@
             <strong data-resumo="total" aria-live="polite">R$ 0,00</strong>
           </div>
           <p class="erro" id="erro" role="alert" hidden></p>
-          <button type="submit" form="form-agendamento" class="botao" id="botao-confirmar">Confirmar agendamento</button>
+          <button type="submit" form="form-agendamento" class="botao" id="botao-confirmar" disabled>Confirmar agendamento</button>
           <button type="button" class="botao botao-secundario" id="botao-novo" hidden>Novo agendamento</button>
           <p class="so-leitor" id="anuncio" role="status"></p>
         </section>
@@ -106,7 +103,7 @@
         <section class="historico" aria-labelledby="titulo-historico">
           <h2 id="titulo-historico">Nesta sessão</h2>
           <ol id="lista-agendamentos" class="agendamentos"></ol>
-          <p id="historico-vazio" class="vazio">Nenhum agendamento ainda. O primeiro aparece aqui.</p>
+          <p id="estado-historico" class="vazio">Carregando agendamentos…</p>
         </section>
       </aside>
     </div>

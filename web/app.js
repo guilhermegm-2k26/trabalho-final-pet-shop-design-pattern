@@ -3,7 +3,6 @@ const moeda = new Intl.NumberFormat("pt-BR", { style: "currency", currency: "BRL
 const PATA =
   '<svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><ellipse cx="5.5" cy="10" rx="2.2" ry="2.7"/><ellipse cx="9.5" cy="5.2" rx="2.2" ry="2.7"/><ellipse cx="14.5" cy="5.2" rx="2.2" ry="2.7"/><ellipse cx="18.5" cy="10" rx="2.2" ry="2.7"/><path d="M12 10.8c-3 0-6.2 4.3-6.2 6.8 0 1.8 1.4 2.6 3 2.6 1.4 0 2.1-.7 3.2-.7s1.8.7 3.2.7c1.6 0 3-.8 3-2.6 0-2.5-3.2-6.8-6.2-6.8z"/></svg>';
 
-// Ícone por id do catálogo. Um serviço ou adicional novo sem ícone usa o brilho padrão.
 const ICONES = {
   banho:
     '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 12h18v1.5A5.5 5.5 0 0 1 15.5 19h-7A5.5 5.5 0 0 1 3 13.5z"/><path d="M6 12V6.5a2.5 2.5 0 0 1 4.6-1.4"/><path d="m7 19-1 2m11-2 1 2"/><circle cx="14" cy="7.5" r="1.3"/><circle cx="17.5" cy="4.8" r="1"/><circle cx="17.8" cy="9.4" r=".8"/></svg>',
@@ -30,12 +29,14 @@ const botaoConfirmar = document.querySelector("#botao-confirmar");
 const botaoNovo = document.querySelector("#botao-novo");
 const avisoServidor = document.querySelector("#aviso-servidor");
 const listaAgendamentos = document.querySelector("#lista-agendamentos");
-const historicoVazio = document.querySelector("#historico-vazio");
+const estadoHistorico = document.querySelector("#estado-historico");
 const resumo = Object.fromEntries(
   [...document.querySelectorAll("[data-resumo]")].map((el) => [el.dataset.resumo, el]),
 );
 
 let ultimoOrcamento = 0;
+let ultimoHistorico = 0;
+let enviando = false;
 
 async function api(caminho, opcoes) {
   const resposta = await fetch(caminho, opcoes);
@@ -107,6 +108,13 @@ function formatarHorario(data, hora) {
   return `${dia}/${mes}/${ano}${hora ? ` ${hora.slice(0, 5)}` : ""}`;
 }
 
+function atualizarDataMinima() {
+  const hoje = new Date();
+  const mes = String(hoje.getMonth() + 1).padStart(2, "0");
+  const dia = String(hoje.getDate()).padStart(2, "0");
+  form.elements.data.min = `${hoje.getFullYear()}-${mes}-${dia}`;
+}
+
 function atualizarResumo() {
   const dados = new FormData(form);
   preencher("tutor", (dados.get("tutor") ?? "").trim());
@@ -114,11 +122,11 @@ function atualizarResumo() {
   preencher("horario", formatarHorario(dados.get("data"), dados.get("hora")));
 }
 
-// O total vem do servidor, que monta o serviço com a fábrica e os decorators.
 async function atualizarOrcamento() {
   const dados = new FormData(form);
   const servico = dados.get("servico");
   const pedido = ++ultimoOrcamento;
+  botaoConfirmar.disabled = true;
 
   if (!servico) {
     preencher("servico", "");
@@ -129,12 +137,17 @@ async function atualizarOrcamento() {
   const parametros = new URLSearchParams({ servico });
   dados.getAll("adicional").forEach((a) => parametros.append("adicional", a));
 
+  preencher("servico", "Calculando…");
+  resumo.total.textContent = "—";
   try {
     const orcamento = await api(`/api/orcamento?${parametros}`);
     if (pedido !== ultimoOrcamento) return;
     preencher("servico", orcamento.servico);
     definirTotal(orcamento.total);
+    botaoConfirmar.disabled = false;
   } catch (falha) {
+    if (pedido !== ultimoOrcamento) return;
+    preencher("servico", "");
     mostrarErro(falha.message);
   }
 }
@@ -148,14 +161,18 @@ function esconderErro() {
   erro.hidden = true;
 }
 
+function bloquearCampos(bloqueado) {
+  form.querySelectorAll("fieldset").forEach((etapa) => {
+    etapa.disabled = bloqueado;
+  });
+}
+
 function definirConfirmado(confirmado) {
   ticket.classList.toggle("confirmado", confirmado);
   carimbo.hidden = !confirmado;
   botaoConfirmar.hidden = confirmado;
   botaoNovo.hidden = !confirmado;
-  form.querySelectorAll("fieldset").forEach((etapa) => {
-    etapa.disabled = confirmado;
-  });
+  bloquearCampos(confirmado);
 }
 
 function mostrarConfirmacao(agendamento) {
@@ -187,15 +204,20 @@ function itemAgendamento(agendamento, destacar) {
 }
 
 async function carregarAgendamentos(destacarUltimo = false) {
+  const pedido = ++ultimoHistorico;
   try {
     const agendamentos = await api("/api/agendamentos");
+    if (pedido !== ultimoHistorico) return;
     const itens = agendamentos
       .map((a, i) => itemAgendamento(a, destacarUltimo && i === agendamentos.length - 1))
       .reverse();
     listaAgendamentos.replaceChildren(...itens);
-    historicoVazio.hidden = agendamentos.length > 0;
+    estadoHistorico.textContent = "Nenhum agendamento ainda. O primeiro aparece aqui.";
+    estadoHistorico.hidden = agendamentos.length > 0;
   } catch {
-    // O aviso do catálogo já informa quando o servidor está fora do ar.
+    if (pedido !== ultimoHistorico) return;
+    estadoHistorico.textContent = "Não foi possível carregar os agendamentos.";
+    estadoHistorico.hidden = false;
   }
 }
 
@@ -212,6 +234,7 @@ form.addEventListener("change", (evento) => {
 
 form.addEventListener("submit", async (evento) => {
   evento.preventDefault();
+  if (enviando || botaoConfirmar.disabled) return;
   esconderErro();
 
   const dados = new FormData(form);
@@ -223,6 +246,8 @@ form.addEventListener("submit", async (evento) => {
   });
   dados.getAll("adicional").forEach((a) => corpo.append("adicional", a));
 
+  enviando = true;
+  bloquearCampos(true);
   botaoConfirmar.disabled = true;
   botaoConfirmar.textContent = "Confirmando…";
   try {
@@ -230,8 +255,10 @@ form.addEventListener("submit", async (evento) => {
     mostrarConfirmacao(agendamento);
     carregarAgendamentos(true);
   } catch (falha) {
+    bloquearCampos(false);
     mostrarErro(falha.message);
   } finally {
+    enviando = false;
     botaoConfirmar.disabled = false;
     botaoConfirmar.textContent = "Confirmar agendamento";
   }
@@ -241,11 +268,14 @@ botaoNovo.addEventListener("click", () => {
   form.reset();
   definirConfirmado(false);
   anuncio.textContent = "";
+  esconderErro();
+  atualizarDataMinima();
   atualizarResumo();
   atualizarOrcamento();
   form.elements.tutor.focus();
 });
 
+atualizarDataMinima();
 carregarCatalogo().then(() => {
   atualizarResumo();
   atualizarOrcamento();

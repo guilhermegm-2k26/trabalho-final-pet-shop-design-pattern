@@ -3,6 +3,8 @@ package br.edu.petshop.servico;
 import java.math.BigDecimal;
 
 public final class CorteDeUnhas extends ServicoComAdicional {
+    public static final BigDecimal PRECO_ADICIONAL = new BigDecimal("15.00");
+
     public CorteDeUnhas(Servico servico) {
         super(servico);
     }
@@ -14,6 +16,6 @@ public final class CorteDeUnhas extends ServicoComAdicional {
 
     @Override
     public BigDecimal preco() {
-        return super.preco().add(new BigDecimal("15.00"));
+        return super.preco().add(PRECO_ADICIONAL);
     }
 }

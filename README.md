@@ -1,6 +1,6 @@
 # Pet Shop
 
-Projeto final da disciplina de Design Patterns (2026.2). A aplicação de terminal registra um agendamento por execução. O tutor informa o nome do pet, escolhe a data, o horário, o serviço e um adicional opcional. Ao final, o sistema mostra a confirmação com o preço total. Os dados ficam em memória durante a execução. [Enunciado da atividade](https://designpatterns.venson.dev/projetos/projeto-final/)
+Projeto final da disciplina de Design Patterns (2026.2), tema 4: Pet Shop. O tutor informa seu nome e o do pet, escolhe um horário futuro e seleciona banho ou tosa, com corte de unhas opcional. O sistema exibe o valor total e confirma o agendamento. No terminal, é feito um agendamento por execução; na web, é possível criar vários e ver a lista enquanto o servidor estiver rodando. [Enunciado da atividade](https://designpatterns.venson.dev/projetos/projeto-final/)
 
 | Etapa | Responsável | Entrega |
 | --- | --- | --- |
@@ -18,15 +18,20 @@ Projeto final da disciplina de Design Patterns (2026.2). A aplicação de termin
 | `Pet` | Guarda o nome do animal e o vínculo com seu tutor. |
 | `Agendamento` | Reúne o pet, o horário e o serviço escolhido com seus adicionais. |
 
-### Pré-requisitos e execução
+### Tecnologias e execução
 
-JDK 17 ou superior, com `java` e `javac` disponíveis no terminal. O projeto usa Java puro e a biblioteca padrão do JDK.
+JDK 17 ou superior, com `java` e `javac` disponíveis no terminal. O projeto usa Java e a biblioteca padrão do JDK; a interface web usa HTML, CSS e JavaScript. Os agendamentos ficam em memória. Não é necessário banco de dados, gerenciador de dependências ou conexão externa para executar a aplicação.
 
 Na raiz do repositório, execute no terminal do macOS ou Linux:
 
 ```bash
 mkdir -p out
 javac --release 17 -encoding UTF-8 -d out $(find src/main/java -name '*.java')
+```
+
+Para usar no terminal:
+
+```bash
 java -cp out br.edu.petshop.Main
 ```
 
@@ -43,7 +48,12 @@ Serviço: Banho + corte de unhas
 Total: R$ 65,00
 ```
 
-Com os mesmos dados, escolha `2` e `n` para agendar apenas tosa. O resumo mostra `Tosa` e o total de `R$ 70,00`. Se informar uma data como `31/02/2030 14:30`, o programa pede uma nova data e hora.
+| Serviço | Sem adicional | Com corte de unhas |
+| --- | ---: | ---: |
+| Banho | R$ 50,00 | R$ 65,00 |
+| Tosa | R$ 70,00 | R$ 85,00 |
+
+Para agendar apenas tosa no terminal, escolha `2` e responda `n` ao adicional. Uma data inexistente, como `31/02/2030 14:30`, ou um horário passado, como `01/01/2020 10:00`, é rejeitado. No terminal, o programa pede um novo horário; no navegador, a pessoa pode corrigir os campos e tentar novamente.
 
 ### Interface web
 
@@ -53,46 +63,41 @@ Além do terminal, o projeto tem uma página de agendamento na pasta `web/`. A c
 java -cp out br.edu.petshop.web.ServidorWeb
 ```
 
-Abra `http://localhost:8080` no navegador. Para usar outra porta, passe o número como argumento, por exemplo `java -cp out br.edu.petshop.web.ServidorWeb 3000`. Os agendamentos ficam em memória enquanto o servidor estiver rodando.
+Abra [http://localhost:8080](http://localhost:8080) no navegador. Para repetir o exemplo, preencha Ana, Luna, 20/11/2030 às 14:30, selecione **Banho** e **Corte de unhas** e confira o total de **R$ 65,00** antes de confirmar. O agendamento aparece em **Nesta sessão**. Para usar outra porta, passe o número como argumento, por exemplo `java -cp out br.edu.petshop.web.ServidorWeb 3000`. Encerre o servidor com Ctrl+C.
 
 | Rota | Uso |
 | --- | --- |
 | `GET /api/catalogo` | Lista os serviços base e os adicionais com seus preços. |
 | `GET /api/orcamento?servico=banho&adicional=corte-unhas` | Monta o serviço com os adicionais e devolve a descrição e o total. |
-| `POST /api/agendamentos` | Cria um agendamento com `tutor`, `pet`, `horario` (`2030-11-20T14:30`), `servico` e `adicional` (opcional e repetível). |
+| `POST /api/agendamentos` | Cria um agendamento. Envie `tutor`, `pet`, `horario` (`2030-11-20T14:30`), `servico` e `adicional` (opcional e repetível) como formulário `application/x-www-form-urlencoded`. |
 | `GET /api/agendamentos` | Lista os agendamentos feitos desde que o servidor foi iniciado. |
 
-Para um novo serviço ou adicional aparecer na página, registre-o nas listas `SERVICOS` e `ADICIONAIS` de `ServidorWeb`. O ícone do cartão é escolhido pelo id em `web/app.js`. Um id sem ícone usa um ícone padrão.
+O terminal e a web usam `CatalogoServicos` para listar as mesmas opções. Na Parte 2, o cadastro de uma nova fábrica ou de um novo adicional fica nessa classe. Na web, um identificador sem ícone específico usa o ícone padrão.
 
 ### Padrões de projeto
 
 #### Factory Method
 
-O fluxo de agendamento é o mesmo para banho e tosa. `AgendamentoFactory.agendar()` concentra esse fluxo e chama `criarServico()` para obter o serviço base. `BanhoFactory` e `TosaFactory` implementam esse método e criam, respectivamente, `Banho` e `Tosa`. Os dois serviços implementam `Servico`. A operação de agendamento funciona com qualquer serviço criado por uma subclasse de `AgendamentoFactory`.
+O fluxo de agendamento é o mesmo para banho e tosa. `AgendamentoFactory` oferece `montarServico()` para orçar e `agendar()` para confirmar; ambos chegam a `criarServico()`, o método de fábrica. `BanhoFactory` e `TosaFactory` implementam esse método e criam, respectivamente, `Banho` e `Tosa`. Os produtos implementam `Servico`. Assim, os fluxos de orçamento e confirmação trabalham com o mesmo contrato, sem precisar instanciar os produtos concretos.
 
 #### Decorator
 
-O corte de unhas é opcional e pode ser combinado com qualquer serviço base. `ServicoComAdicional` implementa `Servico` e delega a descrição e o preço ao serviço que recebe. `CorteDeUnhas` acrescenta seu nome à descrição e soma R$ 15,00 ao preço. `Agendamento` usa a mesma interface `Servico` para um banho simples ou um banho com adicional. A composição permite envolver um serviço já decorado com outro adicional.
+O corte de unhas é opcional e pode ser combinado com qualquer serviço base. `ServicoComAdicional` implementa `Servico` e delega a descrição e o preço ao serviço que recebe. `CorteDeUnhas` envolve o serviço, acrescenta seu nome à descrição e soma R$ 15,00 ao preço. `Agendamento` usa a mesma interface `Servico` para um banho simples ou um banho com adicional. Isso permite acrescentar opções sem criar uma classe para cada combinação de serviço e adicional.
 
 ### Contribuições da equipe dona
 
-Cada integrante deve fazer pelo menos um commit autoral com a própria conta do GitHub e preencher a tabela com o que entregou. Acrescentem uma linha se o grupo tiver quatro pessoas.
+Contribuições já registradas no histórico do Git:
 
 | Integrante | Contribuição realizada | Commit |
 | --- | --- | --- |
-| Guilherme | A preencher após o commit autoral. | — |
-| A preencher | A preencher após o commit autoral. | — |
-| A preencher | A preencher após o commit autoral. | — |
+| Guilherme | Estrutura inicial, entidades, fluxo no terminal, Factory Method e Decorator. | `ffe5d16` |
+| `omrl` | Interface web, servidor HTTP e integração com o agendamento em Java. | `5863007` |
 
-#### Melhorias para distribuir entre os integrantes
-
-- Escrever testes para as duas fábricas e conferir o preço de cada serviço com e sem corte de unhas.
-- Implementar a validação de horários no passado e documentar um exemplo de entrada rejeitada.
-- Mostrar o preço dos serviços e do adicional durante a seleção e conferir se o valor exibido bate com o resumo final.
+Antes da entrega, a equipe deve confirmar os nomes, registrar as contribuições restantes e garantir pelo menos um commit autoral de cada integrante. A tarefa de fechamento técnico é automatizar as verificações das duas fábricas, dos quatro totais da tabela e da rejeição de horários passados.
 
 ### Declaração de uso de IA
 
-Na Parte 1, foi usado OpenAI Codex (GPT-6) para gerar a implementação inicial em Java, estruturar este README e verificar a compilação e os exemplos do fluxo de agendamento. A interface web (pasta `web/` e classe `ServidorWeb`) foi gerada com Claude Code (Claude Opus 5.5).
+Na Parte 1, foi usado OpenAI Codex (GPT-6) para auxiliar na implementação inicial em Java, na organização do catálogo comum, na validação de horários, nos ajustes do formulário e na revisão deste README e dos fluxos de execução. A interface web inicial (pasta `web/` e classe `ServidorWeb`) foi gerada com Claude Code (Claude Opus 5.5), conforme o registro original do projeto.
 
 ## Parte 2 — Extensão via pull request
 

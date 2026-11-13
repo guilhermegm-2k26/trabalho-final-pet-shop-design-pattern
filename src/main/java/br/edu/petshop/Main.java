@@ -3,21 +3,21 @@ package br.edu.petshop;
 import br.edu.petshop.dominio.Agendamento;
 import br.edu.petshop.dominio.Pet;
 import br.edu.petshop.dominio.Tutor;
-import br.edu.petshop.servico.AgendamentoFactory;
-import br.edu.petshop.servico.BanhoFactory;
-import br.edu.petshop.servico.CorteDeUnhas;
+import br.edu.petshop.servico.CatalogoServicos;
+import br.edu.petshop.servico.CatalogoServicos.OpcaoAdicional;
+import br.edu.petshop.servico.CatalogoServicos.OpcaoServico;
 import br.edu.petshop.servico.Servico;
-import br.edu.petshop.servico.TosaFactory;
 import java.nio.charset.StandardCharsets;
 import java.text.NumberFormat;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 import java.time.format.DateTimeParseException;
 import java.time.format.ResolverStyle;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Locale;
 import java.util.NoSuchElementException;
 import java.util.Scanner;
-import java.util.function.UnaryOperator;
 
 public final class Main {
     private static final DateTimeFormatter FORMATO_HORARIO = DateTimeFormatter
@@ -25,6 +25,7 @@ public final class Main {
             .withResolverStyle(ResolverStyle.STRICT);
 
     public static void main(String[] args) {
+        NumberFormat moeda = NumberFormat.getCurrencyInstance(Locale.forLanguageTag("pt-BR"));
         try (Scanner entrada = new Scanner(System.in, StandardCharsets.UTF_8)) {
             System.out.println("Pet Shop | Novo agendamento");
 
@@ -32,16 +33,13 @@ public final class Main {
             Pet pet = new Pet(lerNome(entrada, "Nome do pet: "), tutor);
             LocalDateTime horario = lerHorario(entrada);
 
-            System.out.println("1 - Banho\n2 - Tosa");
-            AgendamentoFactory fabrica = lerOpcao(entrada, "Serviço: ", "1", "2").equals("1")
-                    ? new BanhoFactory() : new TosaFactory();
-
-            UnaryOperator<Servico> personalizar = lerOpcao(entrada, "Incluir corte de unhas? (s/n): ", "s", "n")
-                    .equalsIgnoreCase("s") ? CorteDeUnhas::new : UnaryOperator.identity();
-
-            exibirResumo(fabrica.agendar(pet, horario, personalizar));
+            OpcaoServico servico = lerServico(entrada, moeda);
+            List<OpcaoAdicional> adicionais = lerAdicionais(entrada, moeda);
+            exibirResumo(servico.agendar(pet, horario, adicionais), moeda);
         } catch (NoSuchElementException ex) {
             System.out.println("\nAgendamento cancelado. A entrada foi encerrada.");
+        } catch (IllegalArgumentException ex) {
+            System.out.println("\nAgendamento não confirmado. " + ex.getMessage());
         }
     }
 
@@ -60,26 +58,59 @@ public final class Main {
         while (true) {
             System.out.print("Data e hora (dd/mm/aaaa hh:mm): ");
             try {
-                return LocalDateTime.parse(entrada.nextLine().strip(), FORMATO_HORARIO);
+                LocalDateTime horario = LocalDateTime.parse(entrada.nextLine().strip(), FORMATO_HORARIO);
+                Agendamento.validarHorario(horario);
+                return horario;
             } catch (DateTimeParseException ex) {
                 System.out.println("Data ou hora inválida. Exemplo: 20/11/2030 14:30.");
+            } catch (IllegalArgumentException ex) {
+                System.out.println(ex.getMessage());
             }
         }
     }
 
-    private static String lerOpcao(Scanner entrada, String pergunta, String primeira, String segunda) {
+    private static OpcaoServico lerServico(Scanner entrada, NumberFormat moeda) {
+        List<OpcaoServico> opcoes = CatalogoServicos.servicos();
+        for (int i = 0; i < opcoes.size(); i++) {
+            Servico servico = opcoes.get(i).orcar(List.of());
+            System.out.printf("%d - %s (%s)%n", i + 1, servico.descricao(), moeda.format(servico.preco()));
+        }
+
         while (true) {
-            System.out.print(pergunta);
+            System.out.print("Serviço: ");
             String opcao = entrada.nextLine().strip();
-            if (opcao.equalsIgnoreCase(primeira) || opcao.equalsIgnoreCase(segunda)) {
-                return opcao;
+            for (int i = 0; i < opcoes.size(); i++) {
+                if (opcao.equals(Integer.toString(i + 1))) {
+                    return opcoes.get(i);
+                }
             }
-            System.out.printf("Escolha %s ou %s.%n", primeira, segunda);
+            System.out.println("Escolha um dos serviços da lista.");
         }
     }
 
-    private static void exibirResumo(Agendamento agendamento) {
-        NumberFormat moeda = NumberFormat.getCurrencyInstance(Locale.forLanguageTag("pt-BR"));
+    private static List<OpcaoAdicional> lerAdicionais(Scanner entrada, NumberFormat moeda) {
+        List<OpcaoAdicional> escolhidos = new ArrayList<>();
+        for (OpcaoAdicional adicional : CatalogoServicos.adicionais()) {
+            if (confirmarAdicional(entrada, adicional, moeda)) {
+                escolhidos.add(adicional);
+            }
+        }
+        return escolhidos;
+    }
+
+    private static boolean confirmarAdicional(Scanner entrada, OpcaoAdicional adicional, NumberFormat moeda) {
+        while (true) {
+            System.out.printf("Incluir %s (+ %s)? (s/n): ",
+                    adicional.nome().toLowerCase(Locale.ROOT), moeda.format(adicional.preco()));
+            String resposta = entrada.nextLine().strip();
+            if (resposta.equalsIgnoreCase("s") || resposta.equalsIgnoreCase("n")) {
+                return resposta.equalsIgnoreCase("s");
+            }
+            System.out.println("Digite s para incluir ou n para continuar.");
+        }
+    }
+
+    private static void exibirResumo(Agendamento agendamento, NumberFormat moeda) {
         System.out.println("\nAgendamento confirmado");
         System.out.println("Tutor: " + agendamento.pet().tutor().nome());
         System.out.println("Pet: " + agendamento.pet().nome());
