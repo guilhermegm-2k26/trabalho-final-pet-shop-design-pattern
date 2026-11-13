@@ -92,6 +92,9 @@ Contribuições já registradas no histórico do Git:
 | --- | --- | --- |
 | Guilherme | Estrutura inicial, entidades, fluxo no terminal, Factory Method e Decorator. | `ffe5d16` |
 | `omrl` | Interface web, servidor HTTP e integração com o agendamento em Java. | `5863007` |
+| Thiago Silveira Mazuco | Catálogo compartilhado e validação de horários. | `1b9b8a9` |
+| `omrl` | Validação do nome do pet e do vínculo obrigatório com o tutor. | `48f7170` |
+| João Paulo Sigieski Bonetti | Validação e normalização do nome do tutor. | `2023637` |
 
 Antes da entrega, a equipe deve confirmar os nomes, registrar as contribuições restantes e garantir pelo menos um commit autoral de cada integrante. A tarefa de fechamento técnico é automatizar as verificações das duas fábricas, dos quatro totais da tabela e da rejeição de horários passados.
 
