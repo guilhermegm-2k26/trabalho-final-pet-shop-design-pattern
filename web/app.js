@@ -3,12 +3,33 @@ const moeda = new Intl.NumberFormat("pt-BR", { style: "currency", currency: "BRL
 const PATA =
   '<svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><ellipse cx="5.5" cy="10" rx="2.2" ry="2.7"/><ellipse cx="9.5" cy="5.2" rx="2.2" ry="2.7"/><ellipse cx="14.5" cy="5.2" rx="2.2" ry="2.7"/><ellipse cx="18.5" cy="10" rx="2.2" ry="2.7"/><path d="M12 10.8c-3 0-6.2 4.3-6.2 6.8 0 1.8 1.4 2.6 3 2.6 1.4 0 2.1-.7 3.2-.7s1.8.7 3.2.7c1.6 0 3-.8 3-2.6 0-2.5-3.2-6.8-6.2-6.8z"/></svg>';
 
+const ESCOVA_DENTES = `<svg fill="currentColor" height="800px" width="800px" version="1.1" id="Layer_1" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" 
+	 viewBox="0 0 512.001 512.001" xml:space="preserve">
+<g>
+	<g>
+		<path d="M456.497,125.949c-7.073-7.075-17.604-8.549-26.149-4.474l-49.716-49.714c-8.977-8.977-23.534-8.977-32.513,0
+			l-97.543,97.538c-4.311,4.311-6.733,10.16-6.733,16.257c0,6.099,2.422,11.946,6.733,16.256l48.771,48.77l-36.585,36.585
+			l-74.317,53.081c-1.03,0.736-1.999,1.557-2.894,2.452L55.501,472.754c-8.975,8.979-8.975,23.536,0.003,32.514
+			c4.489,4.489,10.373,6.733,16.256,6.733c5.882,0,11.768-2.245,16.256-6.733l128.705-128.705l74.317-53.083
+			c1.03-0.736,1.999-1.556,2.894-2.452l162.565-162.565C465.475,149.485,465.475,134.927,456.497,125.949z"/>
+	</g>
+</g>
+<g>
+	<g>
+		<path d="M315.608,6.734c-8.975-8.978-23.533-8.978-32.513-0.002l-97.541,97.54c-8.978,8.977-8.978,23.534,0,32.513
+			c4.489,4.491,10.373,6.735,16.257,6.735c5.882,0,11.768-2.245,16.256-6.735l97.541-97.538
+			C324.587,30.27,324.587,15.711,315.608,6.734z"/>
+	</g>
+</g>
+</svg>`;
+
 const ICONES = {
   banho:
     '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 12h18v1.5A5.5 5.5 0 0 1 15.5 19h-7A5.5 5.5 0 0 1 3 13.5z"/><path d="M6 12V6.5a2.5 2.5 0 0 1 4.6-1.4"/><path d="m7 19-1 2m11-2 1 2"/><circle cx="14" cy="7.5" r="1.3"/><circle cx="17.5" cy="4.8" r="1"/><circle cx="17.8" cy="9.4" r=".8"/></svg>',
   tosa:
     '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="6" cy="6" r="3"/><circle cx="6" cy="18" r="3"/><path d="M20 4 8.1 15.9M14.5 14.5 20 20M8.1 8.1 12 12"/></svg>',
   "corte-unhas": PATA,
+  'escovacao-dentes': ESCOVA_DENTES,
 };
 
 const ICONE_PADRAO =
