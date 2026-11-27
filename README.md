@@ -125,14 +125,3 @@ As seguintes alterações foram feitas: Adicionamos 1 funcionalidade ao Factory 
 | Ísis | Auxilio de planejamento / Atualização READ.me |
 | Davi | Auxilio de planejamento |
 
-## Parte 3 — Revisão e arguição
-
-Todos os integrantes da equipe dona participam da revisão autoral. No GitHub, deixem um parecer geral e comentários em trechos específicos do código. Solicitem ajustes quando necessário e, após a aprovação, façam o merge. Na arguição em aula, cada integrante deve saber explicar sua contribuição.
-
-- [ ] Compilar e executar a aplicação seguindo este README.
-- [ ] Conferir a aderência da extensão ao tema e a aplicação dos dois padrões.
-- [ ] Avaliar a justificativa técnica e as refatorações descritas no PR.
-- [ ] Conferir as instruções e as contribuições no README.
-- [ ] Verificar se há indícios de uso de IA na extensão.
-
-**PR revisado e participação da equipe dona na revisão** — a preencher na Parte 3.
