@@ -13,7 +13,8 @@ public final class CatalogoServicos {
             new OpcaoServico("tosa", new TosaFactory()));
 
     private static final List<OpcaoAdicional> ADICIONAIS = List.of(
-            new OpcaoAdicional("corte-unhas", "Corte de unhas", CorteDeUnhas.PRECO_ADICIONAL, CorteDeUnhas::new));
+            new OpcaoAdicional("corte-unhas", "Corte de unhas", CorteDeUnhas.PRECO_ADICIONAL, CorteDeUnhas::new),
+            new OpcaoAdicional("escovacao-dentes", "Escovação de dentes", EscovacaoDeDentes.PRECO_ADICIONAL, EscovacaoDeDentes::new));
 
     private CatalogoServicos() {
     }
