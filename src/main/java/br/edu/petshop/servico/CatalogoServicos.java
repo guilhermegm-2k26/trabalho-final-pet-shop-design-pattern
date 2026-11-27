@@ -10,10 +10,12 @@ import java.util.function.UnaryOperator;
 public final class CatalogoServicos {
     private static final List<OpcaoServico> SERVICOS = List.of(
             new OpcaoServico("banho", new BanhoFactory()),
+            new OpcaoServico("veterinario", new VeterinarioFactory()),
             new OpcaoServico("tosa", new TosaFactory()));
 
     private static final List<OpcaoAdicional> ADICIONAIS = List.of(
-            new OpcaoAdicional("corte-unhas", "Corte de unhas", CorteDeUnhas.PRECO_ADICIONAL, CorteDeUnhas::new));
+            new OpcaoAdicional("corte-unhas", "Corte de unhas", CorteDeUnhas.PRECO_ADICIONAL, CorteDeUnhas::new),
+            new OpcaoAdicional("escovacao-dentes", "Escovação de dentes", EscovacaoDeDentes.PRECO_ADICIONAL, EscovacaoDeDentes::new));
 
     private CatalogoServicos() {
     }

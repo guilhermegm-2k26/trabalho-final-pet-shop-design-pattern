@@ -108,16 +108,20 @@ Após o sorteio, a equipe extensora faz um fork, cria uma branch e acrescenta um
 
 Na descrição do PR, registrem o contexto da proposta, como os dois padrões foram ampliados, as decisões e refatorações realizadas e como testar a extensão. Atualizem este README com a descrição da extensão, instruções de uso e a contribuição de cada integrante da equipe extensora. Cada pessoa deve ter pelo menos um commit autoral no PR. O registro da equipe dona fica na Parte 1.
 
+As seguintes alterações foram feitas: Adicionamos 1 funcionalidade ao Factory Method chamado Veterinario e 1 ao Decorator chamado Escovar-Dentes. Fizemos os registros na classe CatalogoServicos e alteramos seus icones no app.js.
+
+| Serviço | Sem adicional | Com corte de unhas | Com escovar-dentes |
+| --- | ---: | ---: | ---: |
+| Banho | R$ 50,00 | R$ 65,00 | R$ 62,00 |
+| Tosa | R$ 70,00 | R$ 85,00 | R$ 82,00 |
+| Veterinario | R$ 200,00 | R$ 215,00 | R$ 212,00 |
+
 **Descrição da extensão e contribuições da equipe extensora** — a preencher após o sorteio.
 
-## Parte 3 — Revisão e arguição
+| Integrantes | Mudanças |
+| --- | ---: |
+| Ismael | Adicionou Decorator escovar-dentes |
+| Enzo | Adicionou Factory Method Veterinario |
+| Ísis | Auxilio de planejamento / Atualização READ.me |
+| Davi | Auxilio de planejamento |
 
-Todos os integrantes da equipe dona participam da revisão autoral. No GitHub, deixem um parecer geral e comentários em trechos específicos do código. Solicitem ajustes quando necessário e, após a aprovação, façam o merge. Na arguição em aula, cada integrante deve saber explicar sua contribuição.
-
-- [ ] Compilar e executar a aplicação seguindo este README.
-- [ ] Conferir a aderência da extensão ao tema e a aplicação dos dois padrões.
-- [ ] Avaliar a justificativa técnica e as refatorações descritas no PR.
-- [ ] Conferir as instruções e as contribuições no README.
-- [ ] Verificar se há indícios de uso de IA na extensão.
-
-**PR revisado e participação da equipe dona na revisão** — a preencher na Parte 3.
