@@ -1,6 +1,6 @@
 # Pet Shop
 
-Projeto final da disciplina de Design Patterns (2026.2), tema 4: Pet Shop. O tutor informa seu nome e o do pet, escolhe um horário futuro e seleciona banho ou tosa, com adicionais corte de unhas e escovação de dentes. O sistema exibe o valor total e confirma o agendamento. No terminal, é feito um agendamento por execução; na web, é possível criar vários e ver a lista enquanto o servidor estiver rodando. [Enunciado da atividade](https://designpatterns.venson.dev/projetos/projeto-final/)
+Projeto final da disciplina de Design Patterns (2026.2), tema 4: Pet Shop. O tutor informa seu nome e o do pet, escolhe um horário futuro e seleciona banho ou tosa, com corte de unhas opcional. O sistema exibe o valor total e confirma o agendamento. No terminal, é feito um agendamento por execução; na web, é possível criar vários e ver a lista enquanto o servidor estiver rodando. [Enunciado da atividade](https://designpatterns.venson.dev/projetos/projeto-final/)
 
 | Etapa | Responsável | Entrega |
 | --- | --- | --- |
@@ -37,7 +37,7 @@ java -cp out br.edu.petshop.Main
 
 ### Exemplos de uso
 
-Informe `Ana` como tutora, `Luna` como pet, `20/11/2030 14:30` como horário, `1` para banho, `s` para incluir corte de unhas e `n` para excluir escovação de dentes. O resumo exibido será:
+Informe `Ana` como tutora, `Luna` como pet, `20/11/2030 14:30` como horário, `1` para banho e `s` para incluir corte de unhas. O resumo exibido será:
 
 ```text
 Agendamento confirmado
@@ -48,12 +48,12 @@ Serviço: Banho + corte de unhas
 Total: R$ 65,00
 ```
 
-| Serviço | Sem adicional | Com corte de unhas | Com escovação de dentes | Com os dois |
-| --- | ---: | ---: | ---: | ---: |
-| Banho | R$ 50,00 | R$ 65,00 | R$ 62,00 | R$ 77,00 |
-| Tosa | R$ 70,00 | R$ 85,00 | R$ 82,00 | R$ 97,00 |
+| Serviço | Sem adicional | Com corte de unhas |
+| --- | ---: | ---: |
+| Banho | R$ 50,00 | R$ 65,00 |
+| Tosa | R$ 70,00 | R$ 85,00 |
 
-Para agendar apenas tosa no terminal, escolha `2` e responda `n` para todos os adicionais. Uma data inexistente, como `31/02/2030 14:30`, ou um horário passado, como `01/01/2020 10:00`, é rejeitado. No terminal, o programa pede um novo horário; no navegador, a pessoa pode corrigir os campos e tentar novamente.
+Para agendar apenas tosa no terminal, escolha `2` e responda `n` ao adicional. Uma data inexistente, como `31/02/2030 14:30`, ou um horário passado, como `01/01/2020 10:00`, é rejeitado. No terminal, o programa pede um novo horário; no navegador, a pessoa pode corrigir os campos e tentar novamente.
 
 ### Interface web
 
@@ -82,7 +82,7 @@ O fluxo de agendamento é o mesmo para banho e tosa. `AgendamentoFactory` oferec
 
 #### Decorator
 
-O corte de unhas e a escovação de dentes são opcionais e podem ser combinados entre si e com qualquer serviço base. `ServicoComAdicional` implementa `Servico` e delega a descrição e o preço ao serviço que recebe. `CorteDeUnhas` envolve o serviço, acrescenta seu nome à descrição e soma R$ 15,00 ao preço. `EscovacaoDeDentes` faz o mesmo e soma R$ 12,00. `Agendamento` usa a mesma interface `Servico` para um banho simples ou um banho com adicional. Isso permite acrescentar opções sem criar uma classe para cada combinação de serviço e adicional.
+O corte de unhas é opcional e pode ser combinado com qualquer serviço base. `ServicoComAdicional` implementa `Servico` e delega a descrição e o preço ao serviço que recebe. `CorteDeUnhas` envolve o serviço, acrescenta seu nome à descrição e soma R$ 15,00 ao preço. `Agendamento` usa a mesma interface `Servico` para um banho simples ou um banho com adicional. Isso permite acrescentar opções sem criar uma classe para cada combinação de serviço e adicional.
 
 ### Contribuições da equipe dona
 
@@ -108,7 +108,22 @@ Após o sorteio, a equipe extensora faz um fork, cria uma branch e acrescenta um
 
 Na descrição do PR, registrem o contexto da proposta, como os dois padrões foram ampliados, as decisões e refatorações realizadas e como testar a extensão. Atualizem este README com a descrição da extensão, instruções de uso e a contribuição de cada integrante da equipe extensora. Cada pessoa deve ter pelo menos um commit autoral no PR. O registro da equipe dona fica na Parte 1.
 
+As seguintes alterações foram feitas: Adicionamos 1 funcionalidade ao Factory Method chamado Veterinario e 1 ao Decorator chamado Escovar-Dentes. Fizemos os registros na classe CatalogoServicos e alteramos seus icones no app.js.
+
+| Serviço | Sem adicional | Com corte de unhas | Com escovar-dentes |
+| --- | ---: | ---: | ---: |
+| Banho | R$ 50,00 | R$ 65,00 | R$ 62,00 |
+| Tosa | R$ 70,00 | R$ 85,00 | R$ 82,00 |
+| Veterinario | R$ 200,00 | R$ 215,00 | R$ 212,00 |
+
 **Descrição da extensão e contribuições da equipe extensora** — a preencher após o sorteio.
+
+| Integrantes | Mudanças |
+| --- | ---: |
+| Ismael | Adicionou Decorator escovar-dentes |
+| Enzo | Adicionou Factory Method Veterinario |
+| Ísis | Auxilio de planejamento / Atualização READ.me |
+| Davi | Auxilio de planejamento |
 
 ## Parte 3 — Revisão e arguição
 
